@@ -23,11 +23,20 @@ RUN apt-get update && apt-get install -y \
  && rm -rf /var/lib/apt/lists/*
 
 # 2. Apache configs + document root.
-RUN echo "ServerName laravel-app.local" >> /etc/apache2/apache2.conf
+#RUN echo "ServerName laravel-app.local" >> /etc/apache2/apache2.conf
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+RUN mkdir -p /var/log/apache2/
+RUN chmod -R 744 /var/log/apache2/
+ADD etc/apache2/app.conf /etc/apache2/sites-available/
+RUN a2dissite 000-default.conf
+RUN a2ensite app.conf
+#RUN service apache2 reload
+
+#COPY htdocs /usr/local/apache2/htdocs
 
 # 3. mod_rewrite for URL rewrite and mod_headers for .htaccess extra headers like Access-Control-Allow-Origin-
 RUN a2enmod rewrite headers
