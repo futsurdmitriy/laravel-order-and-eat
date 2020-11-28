@@ -1,14 +1,11 @@
 #!/bin/bash
-# This script is used for create virtual hosts on CentOs.
-# Created by alexnogard from http://alexnogard.com
-# Improved by mattmezza from http://matteomerola.me
-# Feel free to modify it
 #   PARAMETERS
 #
 # $usr          - User
 # $dir          - directory of web files
 # $servn        - webserver address without www.
 # $cname        - cname of webserver
+#
 # EXAMPLE
 # Web directory = /var/www/
 # ServerName    = domain.com
@@ -30,7 +27,6 @@
 echo "First of all, is this server an Ubuntu or is it a CentOS or you want to use it for docker?"
 read -p "ubuntu or centos or docker (lowercase, please) : " osname
 
-
 echo "Enter the server name you want"
 read -p "e.g. mydomain.tld (without www) : " servn
 echo "Enter a CNAME"
@@ -51,6 +47,21 @@ echo "Enter the listened IP for the web server"
 read -p "e.g. * : " listen
 echo "Enter the port on which the web server should respond"
 read -p "e.g. 80 : " port
+
+echo "Would you like to configure log paths and names for web server [y/n]? "
+read q
+if [[ "${q}" == "yes" ]] || [[ "${q}" == "y" ]]; then
+    echo "Enter the path to access log files"
+    read -p "e.g. /var/log/apache : " access_log_path
+    echo "Enter the path to error log files"
+    read -p "e.g. /var/log/apache : " error_log_path
+    echo "Enter the path to custom log files"
+    read -p "e.g. /var/log/apache : " custom_log_path
+    access_log_name="${cname}_${servn}_access.log"
+    error_log_name="${cname}_${servn}_error.log"
+    custom_log_name="${cname}_${servn}_custom.log"
+fi
+
 
 SERVICE_=""
 VHOST_PATH="$docker_dir"
@@ -102,12 +113,30 @@ if [[ "${cname}" == "" ]]; then
 alias=$servn
 fi
 
-echo "#### $cname $servn
+access_logs=""
+custom_logs=""
+error_logs=""
+logs=""
+if [ "$access_log_name" != "" ]; then
+    access_logs="AccessLog $access_log_path/$access_log_name"
+fi
+if [ "$custom_log_name" != "" ]; then
+    custom_logs="CustomLog $custom_log_path/$custom_log_name"
+fi
+if [ "$error_log_name" != "" ]; then
+    error_logs="ErrorLog $error_log_path/$error_log_name"
+fi
+
+logs="$access_logs\n\t$custom_logs\n\t$error_logs"
+
+echo -e "#### $cname $servn
 <VirtualHost $listen:$port>
 
     ServerName $servn
     ServerAlias $alias
     DocumentRoot $DOCUMENT_ROOT
+
+    $logs
 
     <Directory $DIRECTORY_>
         Options Indexes FollowSymLinks MultiViews
