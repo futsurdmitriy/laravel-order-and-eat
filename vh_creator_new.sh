@@ -1,62 +1,58 @@
 #!/bin/bash
 #   PARAMETERS
 #
-# $usr          - User
-# $dir          - directory of web files
-# $servn        - webserver address without www.
-# $cname        - cname of webserver
+# $usr          - Користувач
+# $dir          - Рут директорія
+# $servn        - ім'я веб серверу без www.
+# $cname        - префікс до імені (www або develop або stage наприклад)
 #
-# EXAMPLE
-# Web directory = /var/www/
-# ServerName    = domain.com
-# cname            = devel
-#
-#
-# Check if you execute the script as root user
-#
-# This will check if directory already exist then create it with path : /directory/you/choose/domain.com
-# Set the ownership, permissions and create a test index.php file
-# Create a vhost file domain in your /etc/httpd/conf.d/ directory.
-# And add the new vhost to the hosts.
+# Приклад
+# Рут директорія            = /var/www/
+# ім'я веб серверу без www  = domain.com
+# префікс до імені          = devel
 #
 #
+# Перевірте чи ви виконуєте скрипт від імені суперкористувача (root user)
+# Якщо ви плануєте перезавантажувати веб-сервер чи виконувати команди які вимагають права адміністратора
+# тоді розкоментайте наступну перевірку
 # if [ "$(whoami)" != 'root' ]; then
-# echo "Dude, you should execute this script as root user..."
+# echo "You should execute this script as root user..."
 # exit 1;
 # fi
-echo "First of all, is this server an Ubuntu or is it a CentOS or you want to use it for docker?"
-read -p "ubuntu or centos or docker (lowercase, please) : " osname
 
-echo "Enter the server name you want"
-read -p "e.g. mydomain.tld (without www) : " servn
-echo "Enter a CNAME"
-read -p "e.g. www or dev for dev.website.com : " cname
-echo "Enter the path of directory you wanna use (for *.conf file)"
-read -p "e.g. /var/www/, dont forget the / : " dir
+echo "Данний сервер буде використовуватися для Ubuntu чи для CentOS чи ви хочете його використати для докеру?"
+read -p "ubuntu чи centos чи docker (в нижньому регістрі) : " osname
+
+echo "Введіть ім'я для серверу"
+read -p "напр. mydomain.tld (без www) : " servn
+echo "Введіть префікс CNAME"
+read -p "напр. www чи dev для dev.website.com : " cname
+echo "Введіть шлях до директорії яку ви хочете використовувати (для *.conf файлу)"
+read -p "напр. /var/www/, не забудьте / : " dir
 
 if [ "$osname" == "docker" ]; then
-  echo "Enter the path of directory you wanna use (where *.conf file will be created for docker)"
-  read -p "e.g. {full_path_to_project}/etc/apache/, dont forget the / : " docker_dir
+  echo "Введіть шлях до директорії яку ви хочете використовувати (де *.conf файл буде створено для docker)"
+  read -p "напр. {повний_шлях_до_проекту}/etc/apache/, не забудьте / : " docker_dir
 fi
 
-echo "Enter the name of the document root folder"
-read -p "e.g. htdocs : " docroot
-echo "Enter the user you wanna use"
-read -p "e.g. apache/www-data : " usr
-echo "Enter the listened IP for the web server"
-read -p "e.g. * : " listen
-echo "Enter the port on which the web server should respond"
-read -p "e.g. 80 : " port
+echo "Введіть ім'я головної директорії проекту"
+read -p "напр. htdocs : " docroot
+echo "Введіть ім'я користувача якого ви хочете використовувати для доступу"
+read -p "напр. apache/www-data : " usr
+echo "Введіть IP для веб-серверу"
+read -p "напр. *  або 127.0.0.1 : " listen
+echo "Введіть порт для веб-серверу"
+read -p "напр. 80 : " port
 
-echo "Would you like to configure log paths and names for web server [y/n]? "
+echo "Чи хочете ви наконфігурувати шлях до логів для веб-серверу [y/n]? "
 read q
 if [[ "${q}" == "yes" ]] || [[ "${q}" == "y" ]]; then
-    echo "Enter the path to access log files"
-    read -p "e.g. /var/log/apache : " access_log_path
-    echo "Enter the path to error log files"
-    read -p "e.g. /var/log/apache : " error_log_path
-    echo "Enter the path to custom log files"
-    read -p "e.g. /var/log/apache : " custom_log_path
+    echo "Введіть шлях до якого будуть зберігатися лог файли доступу"
+    read -p "напр. /var/log/apache : " access_log_path
+    echo "Введіть шлях до якого будуть зберігатися лог файли помилок"
+    read -p "напр. /var/log/apache : " error_log_path
+    echo "Введіть шлях до якого будуть зберігатися кастомні лог файли "
+    read -p "напр. /var/log/apache : " custom_log_path
     access_log_name="${cname}_${servn}_access.log"
     error_log_name="${cname}_${servn}_error.log"
     custom_log_name="${cname}_${servn}_custom.log"
@@ -81,9 +77,9 @@ elif [ "$osname" == "ubuntu" ]; then
   DIRECTORY_="$dir$cname_$servn/$docroot"
   DOCUMENT_ROOT="$dir$cname_$servn/$docroot"
 elif [ "$osname" != "ubuntu" ] && [ "$osname" != "centos" ] && [ "$osname" != "docker" ]; then
-  echo "Sorry mate but I only support ubuntu or centos or docker"
+  echo "Вибачай але я підтримую лише ubuntu, centos або docker"
   echo " "
-  echo "By the way, are you sure you have entered 'centos' or 'ubuntu' all lowercase???"
+  echo "Ви впевнені що Ви ввели 'centos' чи 'ubuntu' чи 'docker' у нижньому регістрі???"
   exit 1;
 fi
 
@@ -91,9 +87,9 @@ fi
 
 if [[ "$osname" != "docker" ]]; then
   if ! mkdir -p $dir$cname_$servn/$docroot; then
-    echo "Web directory already Exist !"
+    echo "Веб директорія вже існує !"
   else
-    echo "Web directory created with success !"
+    echo "Веб директорія успішно створена !"
   fi
   echo "<h1>$cname $servn</h1>" > $dir$cname_$servn/$docroot/index.html
   chown -R $usr:$usr $dir$cname_$servn/$docroot
@@ -101,9 +97,9 @@ if [[ "$osname" != "docker" ]]; then
   mkdir /var/log/$cname_$servn
 elif [[ "$osname" == "docker" ]]; then
   if ! mkdir -p docker_dir; then
-    echo "Web directory already Exist !"
+    echo "Веб директорія вже існує !"
   else
-    echo "Web directory created with success !"
+    echo "Веб директорія успішно створена !"
   fi
 fi
 
@@ -148,25 +144,26 @@ echo -e "#### $cname $servn
 
 </VirtualHost>" > $VHOST_PATH/$cname_$servn.conf
 if ! echo -e $VHOST_PATH/$cname_$servn.conf; then
-echo "Virtual host wasn't created !"
+echo "Віртуальни хост НЕ БУВ створнеий !"
 else
-echo "Virtual host created !"
+echo "Вірткальний хост СТВОРЕНО !"
 fi
-# echo "Would you like me to create ssl virtual host [y/n]? "
+
+# echo "Ви хочете створити ssl віртуальний хост [y/n]? "
 # read q
 # if [[ "${q}" == "yes" ]] || [[ "${q}" == "y" ]]; then
 # openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout $VHOST_PATH/$cname_$servn.key -out $VHOST_PATH/$cname_$servn.crt
 # if ! echo -e $VHOST_PATH/$cname_$servn.key; then
-# echo "Certificate key wasn't created !"
+# echo "Ключ сертифікату НЕ БУВ створений !"
 # else
-# echo "Certificate key created !"
+# echo "Ключ сертифікату СТВОРЕНО !"
 # fi
 # if ! echo -e $VHOST_PATH/$cname_$servn.crt; then
-# echo "Certificate wasn't created !"
+# echo "Сертифікат НЕ БУВ створений !"
 # else
-# echo "Certificate created !"
+# echo "Сертифікат СТВОРЕНО !"
 # if [ "$osname" == "ubuntu" ]; then
-#   echo "Enabling Virtual host..."
+#   echo "Підключення віртуального хосту ..."
 #   sudo a2ensite $cname_$servn.conf
 # fi
 # fi
@@ -188,11 +185,11 @@ fi
 # </Directory>
 # </VirtualHost>" > $VHOST_PATH/ssl.$cname_$servn.conf
 # if ! echo -e $VHOST_PATH/ssl.$cname_$servn.conf; then
-# echo "SSL Virtual host wasn't created !"
+# echo "SSL Віртуальний хост НЕ БУЛО створено!"
 # else
-# echo "SSL Virtual host created !"
+# echo "SSL Віртуальний хост СТВОРЕНО !"
 # if [ "$osname" == "ubuntu" ]; then
-#   echo "Enabling SSL Virtual host..."
+#   echo "Підключення SSL Віртуального хосту..."
 #   sudo a2ensite ssl.$cname_$servn.conf
 # fi
 # fi
@@ -202,13 +199,13 @@ fi
 # if [ "$alias" != "$servn" ]; then
 # echo "127.0.0.1 $alias" >> /etc/hosts
 # fi
-# echo "Testing configuration"
+# echo "Тестування конфігурації"
 # sudo $CFG_TEST
-# echo "Would you like me to restart the server [y/n]? "
+# echo "Хочете перезапустити сервер [y/n]? "
 # read q
 # if [[ "${q}" == "yes" ]] || [[ "${q}" == "y" ]]; then
 # service $SERVICE_ restart
 # fi
 echo "======================================"
-echo "All works done!"
+echo "Робота виконана успішно!"
 echo ""
