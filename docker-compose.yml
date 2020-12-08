@@ -6,7 +6,7 @@ services:
       context: '.'
       args:
         uid: ${UID}
-    container_name: laravel-app
+    container_name: laravel-order-and-use-app
     ports:
       - 80:80
     environment:
@@ -21,7 +21,7 @@ services:
 
   mysql-db:
     image: mysql:5.7
-    container_name: mysql-db
+    container_name: mysql-order-and-use-db
     volumes:
       - ./run/var:/var/lib/mysql
     ports:
@@ -34,7 +34,7 @@ services:
     networks:
       backend:
         aliases:
-          - mysql-db
+          - mysql-order-and-use-db
 
 networks:
   backend:
